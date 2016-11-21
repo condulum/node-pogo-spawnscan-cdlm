@@ -1,0 +1,34 @@
+workers: #enter your ptc accounts here.
+  -
+    username: "test"
+    password: "test"
+  - 
+    username: "test"
+    password: "test"
+
+travelling_speed: 10 # speed limit, in m/s. (1 km/h = 1/36 m/s, so 36 km/h would be 10 m/s)
+rounds_to_scan: 6 # how many rounds you want the application to scan. this number should not be 
+predict_time: true #if you want the program to predict time as well. time1 and time2 in spawns.json will be used to indicate the range.
+time_accuracy: 5 #1 - 5, how accurate you want your time range to be.
+
+generated: true 
+#if false, will take the non_generated lat long and generate cells.
+#if true, app will ignore non_generated and use predefined areas
+
+non_generated:
+  - lat: 0
+    lng: 0
+    radius: 0
+
+areas: #lat long for the center of the area. radius in meters. Use s2maps.com to help. double for loop to check for dupes
+  "leicester_square": 
+    - lat: 21.114
+      lng: 131.124
+      radius: 1000
+    - lat: 22.1532
+      lng: 115.1512
+      radius: 1000
+  "paddington":
+    - lat: 10.115
+      lng: 156.113
+      radius: 1000

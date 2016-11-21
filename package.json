@@ -1,0 +1,34 @@
+{
+  "name": "node-pogo-spawnscan-cdlm",
+  "version": "0.0.1",
+  "description": "Pokemon Go Spawn Scanner that scans spawn.",
+  "main": "getSpawn.js",
+  "scripts": {
+    "start": "node getSpawn.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/condulum/node-pogo-spawnscan-cdlm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/condulum/node-pogo-spawnscan-cdlm/issues"
+  },
+  "author": "Condulum",
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "js-yaml": "^3.7.0",
+    "lodash": "^4.15.0",
+    "lowdb": "^0.14.0",
+    "moment": "^2.15.0",
+    "nedb": "^1.8.0",
+    "node-ipc": "^8.1.1",
+    "node-schedule": "^1.1.1",
+    "pogobuf": "^1.7.0",
+    "s2-geometry": "^1.2.9",
+    "winston": "^2.3.0"
+  }
+}
