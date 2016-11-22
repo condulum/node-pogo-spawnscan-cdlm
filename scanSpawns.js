@@ -14,7 +14,8 @@ const getCell = require('./lib/getCell'); // local lib to get all the cells.
 
 // END REQUIRE
 
-const config = yaml.safeLoad(readFileSync('./config.yaml')); // read config.
+let config; // config file stub, will read at main
+let worker; // account file stub, will read at main
 
 // setup Logger.
 const logger = new (Logger)({
@@ -64,18 +65,37 @@ function readthefile() {
 
 // refreshes token.
 
-let Trainer = new lib.PTCLogin();
-
 function refreshToken(worker) {
+  let Auth;
+
+  // check for account type.
+
+  switch (worker.type) {
+    case 'ptc':
+      Auth = new lib.PTCLogin();
+      break;
+    case 'google':
+      Auth = new lib.GoogleLogin();
+      break;
+    default:
+      logger.error(`Unknown account type ${worker.type}, will remove from Database.`, {username: worker.username})
+      worker_db.remove({username: worker.username})
+      break;
+  }
+
   // Get worker's token.
-  Trainer = null;
-  Trainer = new lib.PTCLogin();
-  Trainer.login(worker.username, worker.password)
+  Auth.login(worker.username, worker.password)
+
     .then(token => {
+
       logger.info(`Token.`, {username: worker.username, token: token});
       worker_db.update({username: worker.username}, {$set:{token: token}}, {})
+
     }, err => {
-      logger.error(err, {username: worker.username})
+
+      logger.error(`Get token failed, will remove from Database.`, {err: err, username: worker.username})
+      worker_db.remove({username: worker.username})
+
     })
 }
 
@@ -125,7 +145,25 @@ function scan(cell, prevCell=0) {
 
 function main() {
   // initialize all workers
-  Promise.each(config.workers, worker => {
+  try {
+    config = yaml.safeLoad(readFileSync('./config.yaml')); // read config.
+  } catch (err) {
+    console.error('Config not accessible / does not exist.');
+  } finally {
+    process.exit(1)
+  }
+
+  try {
+    workers = yaml.safeLoad(readFileSync('./accounts.yaml')) // read worker
+  } catch (err) {
+    console.error('Accounts.yaml not accessible / does not exist. (Have you done csv2yaml.js yet?)');
+  } finally {
+    process.exit(1)
+  }
+
+  // TODO: separate locations from config.yaml as well, detect accounts.csv and auto convert for user.
+  
+  Promise.each(workers, worker => {
     // insert to database
     worker_db.insert(worker);
   })
@@ -180,7 +218,7 @@ function main() {
 
     // get the first n cells. where n = num of workers.
 
-    const first_cells = _.chunk(cells[current_cell_file], config.workers.length)
+    const first_cells = _.chunk(cells[current_cell_file], workers.length)
     
     // for each cell in the n cells, pass them to scan function.
 
@@ -200,6 +238,7 @@ function schedule_next_scan(scanned_cell) {
 
   // for each cells to scan, get the distance from the scanned_cell to the unscanned_cell.
   if (current_cells_toscan.length != 0) {
+
     Promise.each(current_cells_toscan, unscanned_cell => {
       const unscanned_cell_latlng = s2.idToLatLng(unscanned_cell);
       const unscanned_cell_geo = new geopoint(unscanned_cell_latlng.lat, unscanned_cell_latlng.lng);
@@ -236,7 +275,7 @@ function schedule_next_scan(scanned_cell) {
 
         // get the first n cells. where n = num of workers.
 
-        const first_cells = _.chunk(cells[current_cell_file], config.workers.length)
+        const first_cells = _.chunk(cells[current_cell_file], workers.length)
         
         // for each cell in the n cells, pass them to scan function.
 
@@ -282,6 +321,7 @@ ipc.server.on('yesthing', (spawns, socket) => {
 });
 
 ipc.server.on('token_error', (data, socket) => {
+  worker_db.update({username: data.worker.username}, {$set:{working:false}})
   refreshToken(data.worker) // refresh token of worker
   scan(data.cell, data.cell) // rescans with the same account
 })
