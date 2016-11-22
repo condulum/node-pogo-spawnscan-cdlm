@@ -1,4 +1,8 @@
-# Still a WIP
+# Still a WIP, ACTIVELY WORKING ON IT.
+
+Before we start, the following "Next task" is a note on what I'm currently working on.
+
+## Next task: fix README.
 
 Welcome to node-pogo-scanspawn-cdlm. This scanner scans for spawns that Niantic enabled.
 
