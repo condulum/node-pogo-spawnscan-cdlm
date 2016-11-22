@@ -1,5 +1,7 @@
 TODO
 
+-1. WRITE PORTABLE CODE. --- PLUGINS, PLUG AND PLAY
+
 0. Provide script that lets user turn ptc-acc-gen generated csv into yaml.
 (Also separate acc from config.yaml -> accounts.yaml)
 
@@ -8,6 +10,7 @@ TODO
 3. Implement Captcha check
 4. Implement Hotswap accounts for capped accounts
 5. Implement "REPL" for pasting token when solved captcha
+5.1. REPL option to toggle 2captcha solving / manual solving, (also defaults on hotswap accounts)
 
 6. Research for if Electron could be used to let the user solve the captcha and capture the token
 (optionalDependencies, Nightmare.js)
@@ -17,3 +20,15 @@ TODO
 8. Use the same codebase and implement into "node-pogo-scanner-cdlm"
 9.1 Shut this project down, or
 9.2 Turn this project into a submodule.
+
+[ROADPLAN] (Includes roadplan for node-pogo-scanner-cdlm, node-pogo-database-cdlm, node-pogo-contrib-cdlm and node-pogo-adapter-cdlm)
+
+-1. Finish up contrib, which is the gateway for user submitted data.
+-0.5. (Probably port part of this to Go? I don't know...)
+0. Implement REPL, for full control of scanner.
+1. Implement Proxy support, individually for each account / globally for every eccount.
+2. Somehow Implement Tor Support. 
+3. node-pogo-database-cdlm, regional database, with regional moderator.
+4. Create adapters, for 
+4.1. different scanners pumping data to database/websites/apps/maps 
+4.2. pumping data to social networks such as Twitter, Telegram
