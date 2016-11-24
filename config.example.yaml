@@ -6,13 +6,38 @@ workers: #enter your ptc accounts here.
     username: "test"
     password: "test"
 
+two_captcha: false
+manual_captcha: true
+## two_captcha: uses the two_captcha api to automatically solve your capped accounts. Overrides manual_captcha.
+## manual_captcha: lets user solve the captcha themselves. The worker is first pulled from the pool.
+## Note: if user installed optionalDependencies - i.e. Electron -, the application will pop up a window with injected script, to capture the captcha token.
+## if user did not install optionalDependencies, the application will start a local webserver and start your default browser with the site.
+
+two_captcha_token: "INSERT_TOKEN_HERE"
+manual_captcha: true
+## two_captcha: uses the two_captcha api to automatically solve your capped accounts. Overrides manual_captcha.
+## manual_captcha: lets user solve the captcha themselves. The worker is first pulled from the pool.
+## Note: if user installed optionalDependencies - i.e. Electron -, the application will pop up a window with injected script, to capture the captcha token.
+## if user did not install optionalDependencies, the application will start a local webserver and start your default browser with the site.
+
 travelling_speed: 10 # speed limit, in m/s. (1 km/h = 1/36 m/s, so 36 km/h would be 10 m/s)
 rounds_to_scan: 6 # how many rounds you want the application to scan. this number should not be 
 predict_time: true #if you want the program to predict time as well. time1 and time2 in spawns.json will be used to indicate the range.
 time_accuracy: 5 #1 - 5, how accurate you want your time range to be.
 
-generated: true 
-#if false, will take the non_generated lat long and generate cells.
+# RESERVED FOR FUTURE IMPLEMENTATION
+
+# local_mode: false
+# local_module: "twitter.js"
+
+# db_mode: true
+# db_gRPC: true
+# db_url: "https://your_pogo_database.com/api_endpoint"
+
+# TODO: Explain POST data.
+
+generated: true
+#if false, will take the non_generated lat long and generate cells, or will take files in cell_files if it is not empty.
 #if true, app will ignore non_generated and use predefined areas
 
 non_generated:

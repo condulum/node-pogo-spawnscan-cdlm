@@ -1,35 +1,41 @@
 # Still a WIP, ACTIVELY WORKING ON IT.
+# Next task: fix README.
 
-Before we start, the following "Next task" is a note on what I'm currently working on.
+(Before we start, you should also check out [TODO](./TODO.md))
 
-## Next task: fix README.
+(I've come to a conclusion that one README.md is not enough to explain how this program works. Check wiki.)
 
-Welcome to node-pogo-scanspawn-cdlm. This scanner scans for spawns that Niantic enabled.
+Welcome to node-pogo-scanspawn-cdlm.
 
-This scanner comes with 3 functions.
+### Objective
 
-###`getCell.js`
+Scans for spawns that Niantic enabled.
 
-`getCell.js` lets you get all the cell ids in a certain area, with custom tags.
+### Background
 
-Imagine you have an area with different districts and you want to tag them, e.g. Central London (Zone 1), Stratford (Zone 2), Wimbledon (Greater London), etc.
+Spawn points are all level 20 cells. Niantic could enable and disable spawn points. This is why there are spawn point changes.
 
-```json
-{
-  "zone1": [[11.1493521821, 0.5918317346], [11.1501823124, 0.1754091892]],
-  "zone2": [[14.1936018356, 0.1029581271]]
-}
-```
-and so on...
+This application attemps to scan all the spawn points at a given location / a given area.
 
-The files generated with `getCell.js` can then be passed into `scanSpawns.js`.
+### Requirements
 
-###`scanSpawns.js`
+- `node >= 6.0.0`
 
-This is the main scanner. It scans the cells every 10 minutes (time), up to 6 times (scan interval). (configurable)
+### Configuration
 
-This scanner has 2 modes,
-1. Large Area Scan - This mode lets you define the area and get all the cells within that area, using cell level 17 (configurable). (This mode is not recommended as you will get ALL the spawn points within that area, takes a long time to scan.)
-2. Generated Area Scan - This mode lets you use a pre-generated JSON file containing an array of cell ids, generated from `getCell.js`.
+See wiki.Configuration.
 
-Table for different time, scan interval combination for cell level 15, 16, 17 and 18. (Basic maths calculation)
+### Usage
+
+#### `scanSpawn.js`
+
+`node scanSpawn.js` or `npm start`.
+
+This starts the main program
+
+
+
+
+# Note
+
+You are welcome to use any of the code in your project. You just have to LET ME KNOW. 
