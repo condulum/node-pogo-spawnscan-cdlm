@@ -2,7 +2,7 @@ const yaml = require('js-yaml'); // read config
 const {access, mkdirSync, readFileSync, writeFileSync} = require('fs');  // import fs, only import those which are needed.
 const Promise = require('bluebird'); // replace js Promise.
 const moment = require('moment'); // moment.js, to manipulate time.
-const {Logger} = require('winston'); // logger. 
+const winston = require('winston'); // logger. 
 const schedule = require('node-schedule'); // scheduler, used to schedule scans.
 const nedb = require('nedb'); // database (mongodb api)
 const lib = require('pogobuf'); // pogobuf lib, only used here for refreshing tokens
@@ -18,7 +18,7 @@ let config; // config file stub, will read at main
 let worker; // account file stub, will read at main
 
 // setup Logger.
-const logger = new (Logger)({
+const logger = new (winston.Logger)({
   transports: [
     new (winston.transports.Console)(),
     new (winston.transports.File)({ filename: 'log.log' })
@@ -296,14 +296,14 @@ function dumper() {
 
 //LISTENER
 
-ipc.server.on('WorkerDone', (data, socket) => {
+ipc.server.on('WorkerDone', data => {
   logger.info('Worker killed.', {username: data.worker.username});
   worker_db.update({username: data.worker.username}, {$set:{working:false}})
   schedule_next_scan(data.cell);
 });
 
 
-ipc.server.on('yesthing', (spawns, socket) => {
+ipc.server.on('yesthing', spawns => {
   logger.info('callback_from_worker')
 
   spawns.forEach(celldata => {
