@@ -6,19 +6,17 @@ workers: #enter your ptc accounts here.
     username: "test"
     password: "test"
 
+solve_captcha: true
 two_captcha: false
 manual_captcha: true
+## solve_captcha: solve the captcha at all. (false: puts it in capped.csv and flag as captchaed in database)
 ## two_captcha: uses the two_captcha api to automatically solve your capped accounts. Overrides manual_captcha.
 ## manual_captcha: lets user solve the captcha themselves. The worker is first pulled from the pool.
 ## Note: if user installed optionalDependencies - i.e. Electron -, the application will pop up a window with injected script, to capture the captcha token.
 ## if user did not install optionalDependencies, the application will start a local webserver and start your default browser with the site.
 
 two_captcha_token: "INSERT_TOKEN_HERE"
-manual_captcha: true
-## two_captcha: uses the two_captcha api to automatically solve your capped accounts. Overrides manual_captcha.
-## manual_captcha: lets user solve the captcha themselves. The worker is first pulled from the pool.
-## Note: if user installed optionalDependencies - i.e. Electron -, the application will pop up a window with injected script, to capture the captcha token.
-## if user did not install optionalDependencies, the application will start a local webserver and start your default browser with the site.
+
 
 travelling_speed: 10 # speed limit, in m/s. (1 km/h = 1/36 m/s, so 36 km/h would be 10 m/s)
 rounds_to_scan: 6 # how many rounds you want the application to scan. this number should not be 
