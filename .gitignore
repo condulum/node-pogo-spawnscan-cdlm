@@ -47,6 +47,8 @@ jspm_packages
 .yarn-integrity
 
 config.yaml
+workers.yaml
+locations.yaml
 
 cell_files/*
 

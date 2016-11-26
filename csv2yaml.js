@@ -2,20 +2,20 @@
 // TODO: also include support for a csv file that includes lat, lng
 
 const Promise = require('bluebird');
-const yml = require('js-yaml');
-const csv = require('csv-parse');
+const yaml = require('js-yaml');
+const csv = require('csv');
 const {readFileSync, writeFileSync} = require('fs');
 
-const outputFile = {}
+const outputFile = {};
 
 new Promise((resolve, reject) => {
-  csv(readFileSync(`./accounts.csv`).toString(), {}, function(err, output) {
+  csv.parse(readFileSync(`./accounts.csv`).toString(), {}, function(err, output) {
     if (err) {
-      reject(err)
+      reject(err);
     } else {
-      resolve(output)
+      resolve(output);
     }
-  })
+  });
 })
 
   .each(account => {
@@ -23,10 +23,10 @@ new Promise((resolve, reject) => {
   })
 
   .then(() => {
-    return writeFileSync('accounts.yaml', yaml.safeDump(outputFile))
+    return writeFileSync('accounts.yaml', yaml.safeDump(outputFile));
   })
 
   .catch(err => {
-    console.error(err)
-    process.exit(1)
-  })
+    console.error(err);
+    process.exit(1);
+  });

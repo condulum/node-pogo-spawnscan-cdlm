@@ -1,5 +1,6 @@
 const yaml = require('js-yaml'); // read config
-const {access, mkdirSync, readFileSync, writeFileSync} = require('fs');  // import fs, only import those which are needed.
+const csv = require('csv'); // write capped accounts
+const fs = require('fs'); // import fs, to read configs and write dumps
 const Promise = require('bluebird'); // replace js Promise.
 const moment = require('moment'); // moment.js, to manipulate time.
 const winston = require('winston'); // logger. 
@@ -11,11 +12,13 @@ const {S2: s2} = require('s2-geometry');  // s2 geometry, to get cell id, lat ln
 const cp = require('child_process'); // cp, for forking process (workers)
 const ipc = require('node-ipc'); // ipc, for sub_process communication
 const getCell = require('./lib/getCell'); // local lib to get all the cells.
+const geopoint = require('geopoint'); // to measure lat long 1 and lat long 2's distance.
+const captcha = require('./lib/captcha'); // captcha library
 
 // END REQUIRE
 
 let config; // config file stub, will read at main
-let worker; // account file stub, will read at main
+let workers; // account file stub, will read at main
 
 // setup Logger.
 const logger = new (winston.Logger)({
@@ -52,15 +55,19 @@ function readthefile() {
   return new Promise((resolve, reject) => {
     // get all files in the cell_file directory
     fs.readdir('./cell_files/', (err, files) => {
-      // for each file parse cells and put it in all_cells.
-      files.forEach(file => {
-        let read = JSON.parse(readFileSync(`./cell_files/${file}`).toString());
-        all_cells[file] = read; // all_cells[file_name] contains the cells (in array)
-        // Object.keys(obj)
-      })
-      resolve();
+      if (err) {
+        // for each file parse cells and put it in all_cells.
+        files.forEach(file => {
+          let read = JSON.parse(fs.readFileSync(`./cell_files/${file}`).toString());
+          all_cells[file] = read; // all_cells[file_name] contains the cells (in array)
+          // Object.keys(obj)
+        });
+        resolve();
+      } else {
+        reject(err);
+      }
     });
-  })
+  });
 }
 
 // refreshes token.
@@ -71,16 +78,16 @@ function refreshToken(worker) {
   // check for account type.
 
   switch (worker.type) {
-    case 'ptc':
-      Auth = new lib.PTCLogin();
-      break;
-    case 'google':
-      Auth = new lib.GoogleLogin();
-      break;
-    default:
-      logger.error(`Unknown account type ${worker.type}, will remove from Database.`, {username: worker.username})
-      worker_db.remove({username: worker.username})
-      break;
+  case 'ptc':
+    Auth = new lib.PTCLogin();
+    break;
+  case 'google':
+    Auth = new lib.GoogleLogin();
+    break;
+  default:
+    logger.error(`Unknown account type ${worker.type}, will remove from Database.`, {username: worker.username});
+    worker_db.remove({username: worker.username});
+    break;
   }
 
   // Get worker's token.
@@ -89,14 +96,14 @@ function refreshToken(worker) {
     .then(token => {
 
       logger.info(`Token.`, {username: worker.username, token: token});
-      worker_db.update({username: worker.username}, {$set:{token: token}}, {})
+      worker_db.update({username: worker.username}, {$set:{token: token}}, {});
 
     }, err => {
 
-      logger.error(`Get token failed, will remove from Database.`, {err: err, username: worker.username})
-      worker_db.remove({username: worker.username})
+      logger.error(`Get token failed, will remove from Database.`, {err: err, username: worker.username});
+      worker_db.remove({username: worker.username});
 
-    })
+    });
 }
 
 function scan(cell, prevCell=0) {
@@ -108,7 +115,7 @@ function scan(cell, prevCell=0) {
 
   // get current timestamp
 
-  const now = moment().unix()
+  const now = moment().unix();
   
   // set interval, if no worker is available, which should be impossible, then wait for 1 sec and try to query again.
 
@@ -129,36 +136,36 @@ function scan(cell, prevCell=0) {
         // fork the worker, sends cell data and worker data.
 
         const fork = cp.fork(`./lib/scan_worker.js`);
-        fork.send({cell:cell, worker:AvailableWorker})
+        fork.send({cell:cell, worker:AvailableWorker});
         
         // updates the worker_db that, the worker is working, last scan timestamp, and the cell it is scanning.
 
-        worker_db.update({username: AvailableWorker.username}, {$set:{working:true, last_scan_unix: now, cell: cell}})
+        worker_db.update({username: AvailableWorker.username}, {$set:{working:true, last_scan_unix: now, cell: cell}});
 
         clearInterval(interval);
       } else {
-        logger.info('No Worker available. Will retry in 1 sec.')
+        logger.info('No Worker available. Will retry in 1 sec.');
       }
-    })
-  },1000)
+    });
+  },1000);
 }
 
 function main() {
   // initialize all workers
   try {
-    config = yaml.safeLoad(readFileSync('./config.yaml')); // read config.
+    config = yaml.safeLoad(fs.readFileSync('./config.yaml')); // read config.
   } catch (err) {
-    console.error('Config not accessible / does not exist.');
+    logger.error('Config not accessible / does not exist.');
   } finally {
-    process.exit(1)
+    process.exit(1);
   }
 
   try {
-    workers = yaml.safeLoad(readFileSync('./accounts.yaml')) // read worker
+    workers = yaml.safeLoad(fs.readFileSync('./accounts.yaml')); // read worker
   } catch (err) {
-    console.error('Accounts.yaml not accessible / does not exist. (Have you done csv2yaml.js yet?)');
+    logger.error('Accounts.yaml not accessible / does not exist. (Have you done csv2yaml.js yet?)');
   } finally {
-    process.exit(1)
+    process.exit(1);
   }
 
   // TODO: separate locations from config.yaml as well, detect accounts.csv and auto convert for user.
@@ -170,62 +177,62 @@ function main() {
 
   .then(() => {
     // more initialization on workers.
-    worker_db.update({}, {$set:{token: "", working: false, last_scan_unix: 0, cell: 0}}, {})
+    worker_db.update({}, {$set:{token: "", working: false, last_scan_unix: 0, cell: 0}}, {});
   })
 
   .then(() => {
     // update token for every worker.
     worker_db.find({}, (err, docs) => {
       docs.forEach(worker => {
-        refreshToken(worker)
-      })
-    })
+        refreshToken(worker);
+      });
+    });
   })
 
   .then(() => {
     // make the folder if not exists
-    access('./cell_files/', fs.constants.W_OK, err => {
+    fs.access('./cell_files/', fs.constants.W_OK, err => {
       if (err) {
-        mkdirSync('./cell_files/')
+        fs.mkdirSync('./cell_files/');
       }
-    })
-    access('./result/', fs.constants.W_OK, err => {
+    });
+    fs.access('./result/', fs.constants.W_OK, err => {
       if (err) {
-        mkdirSync('./result/')
+        fs.mkdirSync('./result/');
       }
-    })
+    });
   })
 
   .then(() => {
     if (config.generated) {
-      return getCell.main(config.areas)
+      return getCell.main(config.areas);
     } else {
-      return getCell.main({location: config.non_generated})
+      return getCell.main({location: config.non_generated});
     }
   })
 
   .then(() => {
-    return readthefile()  // read all the files first, to ensure everything is loaded.
+    return readthefile();  // read all the files first, to ensure everything is loaded.
   })
   
   .then(() => {
-    logger.info("Program started.")
+    logger.info("Program started.");
 
     // set the current file that the program is scanning to the first file.
-    current_cell_file = cell_files[_.head(Object.keys(cell_files))];
+    current_cell_file = all_cells[_.head(Object.keys(all_cells))];
 
-    current_cells_toscan = cells[current_cell_file]
+    current_cells_toscan = all_cells[current_cell_file];
 
     // get the first n cells. where n = num of workers.
 
-    const first_cells = _.chunk(cells[current_cell_file], workers.length)
+    const first_cells = _.chunk(all_cells[current_cell_file], workers.length);
     
     // for each cell in the n cells, pass them to scan function.
 
     first_cells[0].forEach(first_cell => {
-      scan(cell) // initiate scan
-    })
-  })
+      scan(first_cell); // initiate scan
+    });
+  });
 }
 
 function schedule_next_scan(scanned_cell) {
@@ -234,7 +241,7 @@ function schedule_next_scan(scanned_cell) {
   // get latlng of scanned_cell, then init new geopoint instance of it
 
   const scanned_cell_latlng = s2.idToLatLng(scanned_cell);
-  const scanned_cell_geo = new geopoint(scanned_cell_latlng.lat, scanned_cell_latlng.lng)
+  const scanned_cell_geo = new geopoint(scanned_cell_latlng.lat, scanned_cell_latlng.lng);
 
   // for each cells to scan, get the distance from the scanned_cell to the unscanned_cell.
   if (current_cells_toscan.length != 0) {
@@ -243,88 +250,117 @@ function schedule_next_scan(scanned_cell) {
       const unscanned_cell_latlng = s2.idToLatLng(unscanned_cell);
       const unscanned_cell_geo = new geopoint(unscanned_cell_latlng.lat, unscanned_cell_latlng.lng);
 
-      unscanned_cells.push({cell: cell, dist: scanned_cell_geo.distanceTo(unscanned_cell_geo, true) * 1000})
+      unscanned_cells.push({cell: scanned_cell, dist: scanned_cell_geo.distanceTo(unscanned_cell_geo, true) * 1000});
     })
     
     .then(() => {
       // sort them by distance.
       return _.sortBy(unscanned_cells, obj => {
-        return obj.dist
-      })
+        return obj.dist;
+      });
     })
     
     .then(sorted => {
-      const next_cell = sorted[0]
+      const next_cell = sorted[0];
       // scan the next cell. (should schedule by calculating distance.)
       // time = distance / speed.
-      const time = next_cell.dist / config.travelling_speed
-      const next = moment().add(time, "s")
-      return schedule.scheduleJob(next.toDate(), scan.bind(null, next_cell.cell, scanned_cell))
-    })
+      const time = next_cell.dist / config.travelling_speed;
+      const next = moment().add(time, "s");
+      return schedule.scheduleJob(next.toDate(), scan.bind(null, next_cell.cell, scanned_cell));
+    });
   } else {
-    switch (round == config.round) {
-      case true: 
-        dumper(); // function that dumps all data to json file,
-        delete cell_files[current_cell_file] // pop the file that just got scanned, then on file list, get the first file, initiate main again.
-        current_cell_file = cell_files[_.head(Object.keys(cell_files))]; // set the current file that the program is scanning to the first file.
-        found = []; // reset found.
-      default: 
-        //set current to scans 
-
-        current_cells_toscan = cells[current_cell_file]
-
-        // get the first n cells. where n = num of workers.
-
-        const first_cells = _.chunk(cells[current_cell_file], workers.length)
-        
-        // for each cell in the n cells, pass them to scan function.
-
-        first_cells[0].forEach(first_cell => {
-          scan(cell) // initiate scan
-        })
-
-        break;
-
+    switch (current_round == config.round) {
+    case true: 
+      dumper(); // function that dumps all data to json file,
+      delete all_cells[current_cell_file]; // pop the file that just got scanned, then on file list, get the first file, initiate main again.
+      current_cell_file = all_cells[_.head(Object.keys(all_cells))]; // set the current file that the program is scanning to the first file.
+      found = []; // reset found.
+      break;
     }
+    //set current to scans 
+
+    current_cells_toscan = all_cells[current_cell_file];
+
+    // get the first n cells. where n = num of workers.
+
+    const first_cells = _.chunk(all_cells[current_cell_file], workers.length);
+    
+    // for each cell in the n cells, pass them to scan function.
+
+    first_cells[0].forEach(first_cell => {
+      scan(first_cell); // initiate scan
+    });
+
   }
 
 }
 
 function dumper() {
-  writeFileSync(`result/spawns_${file}`, JSON.stringify(found))
+  fs.writeFileSync(`result/spawns_${current_cell_file}.json`, JSON.stringify(found));
 }
 
 //LISTENER
 
 ipc.server.on('WorkerDone', data => {
   logger.info('Worker killed.', {username: data.worker.username});
-  worker_db.update({username: data.worker.username}, {$set:{working:false}})
+  worker_db.update({username: data.worker.username}, {$set:{working:false}});
   schedule_next_scan(data.cell);
 });
 
 
 ipc.server.on('yesthing', spawns => {
-  logger.info('callback_from_worker')
+  logger.info('callback_from_worker');
 
   spawns.forEach(celldata => {
     // const origin = (new s2native.S2CellId(new s2native.S2LatLng(celldata.lat, celldata.lng))).parent(20);
     
-    celldata.cell = s2.keyToId(s2.latLngToKey(celldata.lat, celldata.lng, 20))
-    celldata.sid = celldata.cell.toString(16)
+    celldata.cell = s2.keyToId(s2.latLngToKey(celldata.lat, celldata.lng, 20));
+    celldata.sid = celldata.cell.toString(16);
 
     logger.info('Found something.', celldata);
 
     if (found.includes(celldata) == false) {
-      found.push(celldata)
+      found.push(celldata);
     }
-  })
+  });
 });
 
-ipc.server.on('token_error', (data, socket) => {
-  worker_db.update({username: data.worker.username}, {$set:{working:false}})
-  refreshToken(data.worker) // refresh token of worker
-  scan(data.cell, data.cell) // rescans with the same account
-})
+ipc.server.on('token_error', data => {
+  worker_db.update({username: data.worker.username}, {$set:{working:false}});
+  refreshToken(data.worker); // refresh token of worker
+  scan(data.cell, data.cell); // rescans with the same account
+});
+
+ipc.server.on("challenge", data => {
+  logger.info('Worker killed.', {username: data.worker.username});
+  worker_db.update({username: data.worker.username}, {$set:{working:false, capped: true}});
+  scan(data.cell); // let someone else scan it
+  if (config.solve_captcha) {
+    const solver_config = {
+      two_key: config.two_captcha_token,
+      two_cap: config.two_captcha,
+      manual: config.manual_captcha
+    };
+
+    const solver = new captcha(solver_config);
+    
+    solver.solve(data.challenge_url);
+
+  } else {
+    // add to capped.csv, flagged as captcha-ed
+    csv.stringify([data.worker.username, data.worker.password], (err, output) => {
+      if (err) {
+        logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: data.worker, err: err});
+      } else {
+        fs.appendFile('./capped.csv', output+'\n', {}, (err) => {
+          if (err) {
+            logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: data.worker, err: err});
+          }
+        });
+      }
+    });
+  }
+});
 
 ipc.server.start();
 main();

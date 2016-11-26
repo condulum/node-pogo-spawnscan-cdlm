@@ -29,12 +29,35 @@ See wiki.Configuration.
 
 #### `scanSpawn.js`
 
-`node scanSpawn.js` or `npm start`.
+Usage: `node scanSpawn.js` or `npm start`.
 
-This starts the main program
+This starts the main program. (In the future, I might add a REPL flag to start the application in REPL mode.)
 
+#### `csv2yaml.js`
 
+Usage: `node csv2yaml.js`
 
+Turns your accounts.csv into accounts.yaml. (Soon to implement the feature for all csv files, or just read from csv.)
+
+#### `helper_scripts/calibrate_time.js` [NOT IMPLEMENTED YET]
+
+Usage: `node calibrate_time.js [--file=your_scanned_file.json]`
+
+Calibrates the time of the scanned spawn point. Must only be run after scanSpawn.
+
+If no file is passed, the program will calibrate all of them.
+
+#### `helper_scripts/getCellTest.js`
+
+Usage: `node getCellTest.js`
+
+Gets all cells at the point defined in config.yaml (soon to be transferred to locations.yaml)
+
+#### `helper_scripts/check_challenge.js`
+
+Usage: `node check_challenge.js`
+
+Loops through all your accounts and check if any challenge is unsolved. If there is, solve it with 2captcha, manually (electron new window), or just show you which accounts are capped.
 
 # Note
 

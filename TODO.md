@@ -5,17 +5,17 @@
 3. Complete `calibrate_time.js`, to calibrate scanned spawn's time, assuming user has turned on predict_time config.
 4. Provide script that checks all the accounts in accounts.yaml for captchas.
 5. Implement Captcha check 
-5.1 check DONE for more details
+  * check DONE for more details
 6. Implement Hotswap accounts for capped accounts
-6.1 check DONE for more details
+  * check DONE for more details
 7. Implement "REPL" for pasting token when solved captcha. 
-7.1 Check ROADPLAN 3
-7.1 Found solution already: `require("repl")`
-7.2 Flags to disable REPL and run Headless 
+  * Check ROADPLAN 3
+  * Found solution already: `require("repl")`
+  * Flags to disable REPL and run Headless 
 8. REPL option to toggle 2captcha solving / manual solving, (also defaults on hotswap accounts)
 9. Turn this project into modules
-9.1 Use the same codebase and implement into `node-pogo-scanner-cdlm`
-9.2 Shut this project down, or turn this project into a submodule.
+  * Use the same codebase and implement into `node-pogo-scanner-cdlm`
+  * Shut this project down, or turn this project into a submodule.
 
 # IDEAS
 
@@ -34,20 +34,20 @@
 5. Somehow Implement Tor Support. 
 6. node-pogo-database-cdlm, regional database, with regional moderator.
 7. Create adapters, for 
-7.1 different scanners pumping data to database/websites/apps/maps 
-7.2 pumping data to social networks such as Twitter, Telegram
+  * different scanners pumping data to database/websites/apps/maps 
+  * pumping data to social networks such as Twitter, Telegram
 8. If app runs headless, create something that lets remote computer control this controller.
 
 # DONE
 
 1. Provide script that lets user turn ptc-acc-gen generated csv into yaml. (Also separate acc from config.yaml -> accounts.yaml)
-1.1 Note: run csv2yaml.js first.
+  * Note: run csv2yaml.js first.
 
 2. Support for both Pokemon Trainer Club accounts AND Google accounts. 
-2.1 Note: takes type in yaml.
+  * Note: takes type in yaml.
 
 3. Implement Captcha check
-3.1Note: Rudimentary captcha check, will implement electron popup solve / 2captcha solving, or append to "capped.csv"
+  * Note: Rudimentary captcha check, will implement electron popup solve / 2captcha solving, or append to "capped.csv"
 
 4. Research for if Electron could be used to let the user solve the captcha and capture the token
-4.1 Note: researched completed. Found PokemonGo-Map PR 1567, might contact 1567 author.
+  * Note: researched completed. Found PokemonGo-Map PR 1567, might contact 1567 author.
