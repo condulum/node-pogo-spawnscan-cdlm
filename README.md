@@ -1,9 +1,16 @@
 # Still a WIP, ACTIVELY WORKING ON IT.
-# Next task: fix README.
 
-(Before we start, you should also check out [TODO](./TODO.md))
+## Things to check out
 
-(I've come to a conclusion that one README.md is not enough to explain how this program works. Check wiki.)
+1. [TODO List](./TODO.md)
+2. [Changelog](./Changelog.md)
+3. Wiki
+
+## Exciting stuff
+
+I've decided that for every completed TODO item, I will bump the PATCH number by 1. For important milestone I will bump the MINOR number by 1.
+
+## The real README
 
 Welcome to node-pogo-scanspawn-cdlm.
 

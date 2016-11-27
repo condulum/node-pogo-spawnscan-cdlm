@@ -335,8 +335,10 @@ ipc.server.on("challenge", data => {
   logger.info('Worker killed.', {username: data.worker.username});
   worker_db.update({username: data.worker.username}, {$set:{working:false, capped: true}});
   scan(data.cell); // let someone else scan it
-  if (config.solve_captcha) {
-    const solver_config = {
+
+  if (config.solve_captcha) { // if solve captcha is enabled then
+
+    const solver_config = { // pass config into the solver.
       two_key: config.two_captcha_token,
       two_cap: config.two_captcha,
       manual: config.manual_captcha
@@ -344,23 +346,45 @@ ipc.server.on("challenge", data => {
 
     const solver = new captcha(solver_config);
     
-    solver.solve(data.challenge_url);
+    solver.solve(data.challenge_url)
+      .then(token => {
+        let solve_client = new lib.Client();
+        solve_client.setAuthInfo(data.worker.type, data.worker.token);
+        solve_client.init()
+          .then(() => {
+            return solve_client.verifyChallenge(token);
+          })
+          .then(success => {
+            if (!success) {
+              logger.error("Solve Challenge Failed.", {worker: data.worker});
+            } else {
+              worker_db.update({username: data.worker.username}, {$set: {capped: false}});
+            }
+          });
+      }, err => {
+        logger.error(err);
+        tocsv(data.worker);
+      });
 
   } else {
-    // add to capped.csv, flagged as captcha-ed
-    csv.stringify([data.worker.username, data.worker.password], (err, output) => {
-      if (err) {
-        logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: data.worker, err: err});
-      } else {
-        fs.appendFile('./capped.csv', output+'\n', {}, (err) => {
-          if (err) {
-            logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: data.worker, err: err});
-          }
-        });
-      }
-    });
+    tocsv(data.worker);
   }
 });
+
+function tocsv(worker){
+  // add to capped.csv, flagged as captcha-ed
+  csv.stringify([worker.username, worker.password], (err, output) => {
+    if (err) {
+      logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: worker, err: err});
+    } else {
+      fs.appendFile('./capped.csv', output+'\n', {}, (err) => {
+        if (err) {
+          logger.error('Add account to capped.csv unsuccessful. Check log for details', {worker: worker, err: err});
+        }
+      });
+    }
+  });
+}
 
 ipc.server.start();
 main();

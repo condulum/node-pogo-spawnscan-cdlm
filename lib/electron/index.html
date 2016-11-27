@@ -1,42 +1,15 @@
 <html>
   <head>
-    <title>Pokémon GO</title>
-    <meta name="viewport" content="width=device-width, initial-scale=.9"/>
   </head>
   <body>
-    <script id="template" type="text/x-handlebars-template">
-      <div class="content">
-        <form action="?" method="POST">
-          <div class="g-recaptcha"
-          data-size="compact"
-          data-sitekey="{{site_key}}"
-          data-callback="captchaResponse">
-          </div>
-        </form>
-      </div>
-    </script>
-    <script type="text/javascript">
-      const {ipcRenderer} = require('electron');
-      const templateEl = document.getElementById('template');
-      const template = Handlebars.compile(templateEl.innerHTML);
-      ipcRenderer.on('prerender', (event, object) => {
-        document.getElementsByTagName("body")[0].appendChild(template(object.site_key))
+    <webview id="webview" src="https://pgorelease.nianticlabs.com/plfe/rpc" maxwidth="400" maxheight="500" preload="./inject.js" nodeintegration></webview>
+    <script>
+      const webview = document.getElementById("webview");
+      webview.addEventListener('ipc-message', event => {
+        if (event.channel == 'refresh') {
+          webview.reload()
+        }
       })
-
-      var captchaResponse = function(str){
-        var elem = document.getElementById('g-recaptcha-response');
-        var res  = elem ? (elem.value || str) : str;
-
-        setTimeout(function(){
-          if(res && last_res !== res){
-            console.log(res);
-            last_res = res;
-            initCaptchaPage();
-            document.getElementById('messages').innerHTML = '<img src="{{domain}}/add_token?token='+res+'"/>'
-          }
-        }, 1);
-      };
-
-    </script> 
+    </script>
   </body>
 </html>
